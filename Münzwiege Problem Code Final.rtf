@@ -1,0 +1,156 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1031{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+{\*\generator Riched20 10.0.19041}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\f0\fs22\lang7\par
+import java.io.*;\par
+import java.util.Random;\par
+\par
+public class CoinWeighingProblem_mit_Statistik_mit_Ausgabe \{\par
+    public static void main(String[] args) \{\par
+        try (PrintWriter writer = new PrintWriter(new FileWriter("output.txt"))) \{\par
+            writer.println("Ziel ist es, eine gef\'e4lschte M\'fcnze zu finden.");\par
+            writer.println("Eine von 12 M\'fcnzen ist entweder zu leicht oder zu schwer. Man darf nur dreimal wiegen.\\n");\par
+\par
+            int simulationen = 1200; // Anzahl der Simulationen\par
+            int richtigeIdentifikationen = 0;\par
+\par
+            for (int sim = 0; sim < simulationen; sim++) \{\par
+                int[] coins = new int[12];\par
+                for (int i = 0; i < 12; i++) \{\par
+                    coins[i] = 10;\par
+                \}\par
+\par
+                Random rand = new Random();\par
+                int fakeCoin = rand.nextInt(12);\par
+                boolean isHeavier = rand.nextBoolean();\par
+                coins[fakeCoin] = isHeavier ? 12 : 8;\par
+                writer.println("\\nSimulation gestartet. Eine M\'fcnze ist gef\'e4lscht.");\par
+                writer.println("\\t(F\'fcr Testzwecke: M\'fcnze " + (fakeCoin + 1) + " ist " + \par
+                              (isHeavier ? "schwerer (12g)" : "leichter (8g)") + ")");\par
+\par
+                // F\'fchre die W\'e4gungen durch\par
+                if (findFakeCoin(coins, fakeCoin, writer)) \{\par
+                    richtigeIdentifikationen++;\par
+                \}\par
+            \}\par
+\par
+            writer.println("Korrekte Identifikationen: " + richtigeIdentifikationen);\par
+            writer.println("Genauigkeit: " + (100.0 * richtigeIdentifikationen / simulationen) + "%");\par
+        \} catch (IOException e) \{\par
+            e.printStackTrace();\par
+        \}\par
+    \}\par
+      public static int weigh(int[] coins, int[] left, int[] right) \{\par
+        int leftSum = 0, rightSum = 0;\par
+        for (int i : left) leftSum += coins[i];\par
+        for (int i : right) rightSum += coins[i];\par
+        if (leftSum < rightSum) return -1;\par
+        if (leftSum > rightSum) return 1;\par
+        return 0;\par
+    \}\par
+    \par
+    public static boolean findFakeCoin(int[] coins, int fakeCoin,PrintWriter writer) \{\par
+    int identifiedCoin = -1; // Index der identifizierten M\'fcnze\par
+    boolean identifiedHeavier = false; // Ist die identifizierte M\'fcnze schwerer?\par
+\par
+    int[] left1 = \{0, 1, 2, 3\};\par
+    int[] right1 = \{4, 5, 6, 7\};\par
+    int result1 = weigh(coins, left1, right1);\par
+    writer.println("W\'e4gung 1: M\'fcnzen 1-4 vs. 5-8: " + \par
+                      (result1 == 0 ? "gleich" : (result1 == 1 ? "1-4 schwerer" : "5-8 schwerer")));\par
+\par
+    if (result1 == 0) \{\par
+        int[] left2 = \{8, 9, 10\};\par
+        int[] right2 = \{0, 1, 2\};\par
+        int result2 = weigh(coins, left2, right2);\par
+        writer.println("W\'e4gung 2: M\'fcnzen 9-11 vs. 1-3: " + \par
+                          (result2 == 0 ? "gleich" : (result2 == 1 ? "9-11 schwerer" : "9-11 leichter")));\par
+\par
+        if (result2 == 0) \{\par
+            identifiedCoin = 11; // M\'fcnze 12\par
+            identifiedHeavier = coins[11] == 12;\par
+            writer.println("W\'e4gung 3: M\'fcnze 1 vs. 12: " + (coins[11] == 12 ? "12 schwerer" : "1 schwerer"));\par
+            writer.println("Ergebnis: M\'fcnze 12 ist " + (coins[11] == 12 ? "schwerer" : "leichter"));\par
+        \} else if (result2 == 1) \{\par
+            int result3 = weigh(coins, new int[]\{8\}, new int[]\{9\});\par
+            writer.println("W\'e4gung 3: M\'fcnze 9 vs. 10: " + \par
+                              (result3 == 0 ? "gleich" : (result3 == 1 ? "9 schwerer" : "10 schwerer")));\par
+            if (result3 == 0) \{ identifiedCoin = 10; identifiedHeavier = true; writer.println("Ergebnis: M\'fcnze 11 ist schwerer"); \}\par
+            else if (result3 == 1) \{ identifiedCoin = 8; identifiedHeavier = true; writer.println("Ergebnis: M\'fcnze 9 ist schwerer"); \}\par
+            else \{ identifiedCoin = 9; identifiedHeavier = true; writer.println("Ergebnis: M\'fcnze 10 ist schwerer"); \}\par
+        \} else \{\par
+            int result3 = weigh(coins, new int[]\{8\}, new int[]\{9\});\par
+            writer.println("W\'e4gung 3: M\'fcnze 9 vs. 10: " + \par
+                              (result3 == 0 ? "gleich" : (result3 == 1 ? "9 schwerer" : "10 schwerer")));\par
+            if (result3 == 0) \{ identifiedCoin = 10; identifiedHeavier = false; writer.println("Ergebnis: M\'fcnze 11 ist leichter"); \}\par
+            else if (result3 == 1) \{ identifiedCoin = 9; identifiedHeavier = false; writer.println("Ergebnis: M\'fcnze 10 ist leichter"); \}\par
+            else \{ identifiedCoin = 8; identifiedHeavier = false; writer.println("Ergebnis: M\'fcnze 9 ist leichter"); \}\par
+        \}\par
+    \} else if (result1 == 1) \{\par
+        int[] left2 = \{0, 1, 4\};\par
+        int[] right2 = \{2, 7, 9\};\par
+        int result2 = weigh(coins, left2, right2);\par
+        writer.println("W\'e4gung 2: M\'fcnzen 1,2,5 vs. 3,8,10: " + \par
+                          (result2 == 0 ? "gleich" : (result2 == 1 ? "1,2,5 schwerer" : "1,2,5 leichter")));\par
+\par
+        if (result2 == 0) \{\par
+            int result3 = weigh(coins, new int[]\{5\}, new int[]\{6\});\par
+            writer.println("W\'e4gung 3: M\'fcnze 6 vs. 7: " + \par
+                              (result3 == 0 ? "gleich" : (result3 == 1 ? "6 schwerer" : "7 schwerer")));\par
+            if (result3 == 1) \{ identifiedCoin = 6; identifiedHeavier = false; writer.println("Ergebnis: M\'fcnze 7 ist leichter"); \}\par
+            else if (result3 == -1) \{ identifiedCoin = 5; identifiedHeavier = false; writer.println("Ergebnis: M\'fcnze 6 ist leichter"); \}\par
+            else \{ identifiedCoin = 3; identifiedHeavier = true; writer.println("Ergebnis: M\'fcnze 4 ist schwerer"); \}\par
+        \} else if (result2 == 1) \{\par
+            int result3 = weigh(coins, new int[]\{0\}, new int[]\{1\});\par
+            writer.println("W\'e4gung 3: M\'fcnze 1 vs. 2: " + \par
+                              (result3 == 0 ? "gleich" : (result3 == 1 ? "1 schwerer" : "2 schwerer")));\par
+            if (result3 == 0) \{ identifiedCoin = 7; identifiedHeavier = false; writer.println("Ergebnis: M\'fcnze 8 ist leichter"); \}\par
+            else if (result3 == 1) \{ identifiedCoin = 0; identifiedHeavier = true; writer.println("Ergebnis: M\'fcnze 1 ist schwerer"); \}\par
+            else \{ identifiedCoin = 1; identifiedHeavier = true; writer.println("Ergebnis: M\'fcnze 2 ist schwerer"); \}\par
+        \} else \{\par
+            int result3 = weigh(coins, new int[]\{2\}, new int[]\{0\});\par
+            writer.println("W\'e4gung 3: M\'fcnze 3 vs. 1: " + \par
+                              (result3 == 0 ? "gleich" : (result3 == 1 ? "3 schwerer" : "1 schwerer")));\par
+            if (result3 == 1) \{ identifiedCoin = 2; identifiedHeavier = true; writer.println("Ergebnis: M\'fcnze 3 ist schwerer"); \}\par
+            else if (result3 == -1) \{ identifiedCoin = 0; identifiedHeavier = false; writer.println("Ergebnis: M\'fcnze 1 ist leichter"); \}\par
+            else \{ identifiedCoin = 4; identifiedHeavier = false; writer.println("Ergebnis: M\'fcnze 5 ist leichter"); \}\par
+        \}\par
+    \} else \{\par
+        int[] left2 = \{4, 5, 0\};\par
+        int[] right2 = \{3, 7, 9\};\par
+        int result2 = weigh(coins, left2, right2);\par
+        writer.println("W\'e4gung 2: M\'fcnzen 5,6,1 vs. 4,8,10: " + \par
+                          (result2 == 0 ? "gleich" : (result2 == 1 ? "5,6,1 schwerer" : "5,6,1 leichter")));\par
+\par
+        if (result2 == 0) \{\par
+            int result3 = weigh(coins, new int[]\{1\}, new int[]\{2\});\par
+            writer.println("W\'e4gung 3: M\'fcnze 2 vs. 3: " + \par
+                              (result3 == 0 ? "gleich" : (result3 == 1 ? "2 schwerer" : "3 schwerer")));\par
+            if (result3 == 0) \{ identifiedCoin = 6; identifiedHeavier = true; writer.println("Ergebnis: M\'fcnze 7 ist schwerer"); \}\par
+            else if (result3 == 1) \{ identifiedCoin = 2; identifiedHeavier = false; writer.println("Ergebnis: M\'fcnze 3 ist leichter"); \}\par
+            else \{ identifiedCoin = 1; identifiedHeavier = false; writer.println("Ergebnis: M\'fcnze 2 ist leichter"); \}\par
+        \} else if (result2 == 1) \{\par
+            int result3 = weigh(coins, new int[]\{4\}, new int[]\{5\});\par
+            writer.println("W\'e4gung 3: M\'fcnze 5 vs. 6: " + \par
+                              (result3 == 0 ? "gleich" : (result3 == 1 ? "5 schwerer" : "6 schwerer")));\par
+            if (result3 == 0) \{ identifiedCoin = 3; identifiedHeavier = false; writer.println("Ergebnis: M\'fcnze 4 ist leichter"); \}\par
+            else if (result3 == 1) \{ identifiedCoin = 4; identifiedHeavier = true; writer.println("Ergebnis: M\'fcnze 5 ist schwerer"); \}\par
+            else \{ identifiedCoin = 5; identifiedHeavier = true; writer.println("Ergebnis: M\'fcnze 6 ist schwerer"); \}\par
+        \} else \{\par
+            int result3 = weigh(coins, new int[]\{6\}, new int[]\{7\});\par
+            writer.println("W\'e4gung 3: M\'fcnze 7 vs. 8: " + \par
+                              (result3 == 0 ? "gleich" : (result3 == 1 ? "7 schwerer" : "8 schwerer")));\par
+            if (result3 == 0) \{ identifiedCoin = 0; identifiedHeavier = false; writer.println("Ergebnis: M\'fcnze 1 ist leichter"); \}\par
+            else if (result3 == 1) \{ identifiedCoin = 6; identifiedHeavier = true; writer.println("Ergebnis: M\'fcnze 7 ist schwerer"); \}\par
+            else \{ identifiedCoin = 7; identifiedHeavier = true; writer.println("Ergebnis: M\'fcnze 8 ist schwerer"); \}\par
+        \}\par
+    \}\par
+\par
+    // Vergleich mit der tats\'e4chlichen gef\'e4lschten M\'fcnze\par
+    boolean isHeavier = coins[fakeCoin] == 12;\par
+    return identifiedCoin == fakeCoin && identifiedHeavier == isHeavier;\par
+    \par
+\}\par
+\par
+\}\par
+}
+ 
